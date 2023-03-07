@@ -1,85 +1,104 @@
-Public Sub wsloops()
+Sub Ticker()
 
-' Create loop for all worksheets
+Dim ws As Worksheet
 
- For Each ws In Worksheets
- 
-' Assign variables
+For Each ws In Worksheets
 
- Dim ticker As String
-    Dim vol_sum As Double
-    vol_sum = 0
+Dim Ticker_Name As String
+Dim Ticker_Table_Row As Integer
+Dim Row_Length As Double
+Dim Year_Close As Double
+Dim Year_Open As Double
+Dim Yearly_Change As Double
+Dim Vol As Double
 
-    Dim Summary_Table_Row As Integer
-    Dim year_open As Double
-    Dim year_close As Double
-
-' Name generation for columns that will be added
+    ' printing table headers
+    ws.Range("I1").Value = "Ticker"
+    ws.Range("J1").Value = "Yearly Change"
+    ws.Range("K1").Value = "Percentage Change"
+    ws.Range("L1").Value = "Total Stock Volume"
     
-    ws.Cells(1, 9).Value = "ticker"
-    ws.Cells(1, 10).Value = "Yearly_change"
-    ws.Cells(1, 12).Value = "Total Stock Vol"
-    ws.Cells(1, 11).Value = "Yearly_percentage"
 
-    Summary_Table_Row = 2
+Ticker_Table_Row = 2
+
+' finding last row
+Row_Length = ws.Cells(Rows.Count, 1).End(xlUp).Row
+
+
+For i = 2 To Row_Length
     
-' Create loop for table
+    If ws.Cells(i, 3).Value = 0 Then
     
-    lastrow = ws.Cells(Rows.Count, 1).End(xlUp).Row
-    For i = 2 To lastrow
+        If ws.Cells(i + 1).Value <> ws.Cells(i, 1).Value Then
+            Ticker_Name = ws.Cells(i, 1).Value
+            
+        End If
 
-' In case a value is = 0
+    ElseIf ws.Cells(i + 1, 1).Value = ws.Cells(i, 1).Value Then
 
-      If year_open = 0 Then
-          
-         year_open = ws.Cells(i, 3).Value
-         
-      End If
-
-' Defining where the data should map to based on their ticker category
-      If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
-          
-          ticker = ws.Cells(i, 1).Value
-          
-          year_close = ws.Cells(i, 6).Value
-          yearly_change = year_close - year_open
-          
-' Changed to percent with formating in excel (could add *100 here if not)
-          yearly_percentage = (yearly_change / year_open)
-
-          vol_sum = vol_sum + ws.Cells(i, 7).Value
-
-'Map where the summary table values will go
-          
-          ws.Range("j" & Summary_Table_Row).Value = yearly_change
-          ws.Range("I" & Summary_Table_Row).Value = ticker
-          ws.Range("K" & Summary_Table_Row).Value = yearly_percentage
-          ws.Range("L" & Summary_Table_Row).Value = vol_sum
-
-          Summary_Table_Row = Summary_Table_Row + 1
-
-' Reset value of ticker category before moving to next
-          vol_sum = 0
-
-      Else
-
-          vol_sum = vol_sum + Cells(i, 7).Value
-
-      End If
-
-    Next i
+        Vol = Vol + ws.Cells(i, 7).Value
+        
+        If ws.Cells(i - 1, 1).Value <> ws.Cells(i, 1).Value Then
+            Year_Open = ws.Cells(i, 3).Value
+        End If
+        
+    Else
+        
+        Ticker_Name = ws.Cells(i, 1).Value
+        Vol = Vol + ws.Cells(i, 7).Value
+        Year_Close = ws.Cells(i, 6).Value
+        
+        ws.Range("I" & Ticker_Table_Row).Value = Ticker_Name
+        ws.Range("L" & Ticker_Table_Row).Value = Vol
+        
+        If Vol > 0 Then
+        
+            ws.Range("J" & Ticker_Table_Row).Value = Year_Close - Year_Open
+        
+        ' changing colour
+            If ws.Range("J" & Ticker_Table_Row).Value > 0 Then
+                ws.Range("J" & Ticker_Table_Row).Interior.ColorIndex = 4
+                
+            Else
+                ws.Range("J" & Ticker_Table_Row).Interior.ColorIndex = 3
+            
+            End If
+            
+        ws.Range("K" & Ticker_Table_Row).Value = ws.Range("J" & Ticker_Table_Row) / Year_Open
+        
+        Else
+        
+        ws.Range("J" & Ticker_Table_Row) = 0
+        ws.Range("K" & Ticker_Table_Row) = 0
+        
     
-' Create labels for calculations
+    End If
+    
+        ws.Range("K" & Ticker_Table_Row).Style = "percent"
+        
+        Vol = 0
+        Ticker_Table_Row = Ticker_Table_Row + 1
+        
+End If
+    
+Next i
 
-ws.Cells(2, 14).Value = "Greatest % Increase"
-ws.Cells(3, 14).Value = "Greatest % Decrease"
-ws.Cells(4, 14).Value = "Greatest Volume"
+   ' Create labels for calculations
 
-' Calculate max and min for summary table
+       ws.Cells(2, 14).Value = "Greatest % Increase"
+       ws.Cells(3, 14).Value = "Greatest % Decrease"
+       ws.Cells(4, 14).Value = "Greatest Volume"
 
-ws.Cells(2, 15).Value = Application.WorksheetFunction.Max(ws.Range("K2:K3001"))
-ws.Cells(3, 15).Value = Application.WorksheetFunction.Min(ws.Range("K2:K3001"))
-ws.Cells(4, 15).Value = Application.WorksheetFunction.Max(ws.Range("L2:L3001"))
-Next ws
+   ' Calculate max and min for summary table
+
+      ws.Cells(2, 15).Value = Application.WorksheetFunction.Max(ws.Range("K2:K3001"))
+      ws.Cells(3, 15).Value = Application.WorksheetFunction.Min(ws.Range("K2:K3001"))
+      ws.Cells(4, 15).Value = Application.WorksheetFunction.Max(ws.Range("L2:L3001"))
+
+
+        
+        
+
+ Next ws
 
 End Sub
